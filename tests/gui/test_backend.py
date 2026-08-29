@@ -211,20 +211,19 @@ async def test_chatgpt_session_uses_managed_codex_provider_without_persisting_to
     )
     try:
         runtime_session = cast(Any, session)
-        inner = runtime_session._session
-        custom = inner.get_custom_config()
-        provider = inner._cli.soul.runtime.llm.chat_provider
+        custom = runtime_session.get_custom_config()
+        provider = runtime_session._cli.soul.runtime.llm.chat_provider
 
         assert provider.name == "openai-codex"
         assert str(provider.client.base_url).rstrip("/") == CODEX_BASE_URL
         assert "user" not in provider._generation_kwargs
         assert provider._session_id == session.id
         assert custom["provider_dict"]["api_key"] == "oauth-managed"
-        assert custom["provider_dict"]["capabilities"] == ["thinking", "image_in"]
+        assert set(custom["provider_dict"]["capabilities"]) == {"thinking", "image_in"}
         assert custom["provider_dict"]["max_tokens"] == 128_000
         assert custom["provider_dict"]["thinking_effort"] == "medium"
         assert access_token not in repr(custom["provider_dict"])
-        assert inner._cli.soul.runtime.llm.max_context_size == 272_000
+        assert runtime_session._cli.soul.runtime.llm.max_context_size == 272_000
         assert "max_output_tokens" not in provider._generation_kwargs
         assert provider._generation_kwargs["reasoning_effort"] == "medium"
     finally:
